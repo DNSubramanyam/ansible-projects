@@ -1,0 +1,79 @@
+- name: install mariadb server
+  apt:
+    name: mariadb-server
+    state: present
+    update_cache: yes
+
+- name: start mariadb server
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Install PyMySQL
+  apt:
+    name: python3-pymysql
+    state: present
+
+- name: Create a new database for ecom app
+  mysql_db:
+    name: "{{ dbname }}"
+    state: present
+    login_unix_socket: "{{ login_sql_socket }}"
+
+- name: Create database user with password and all database privileges and 'WITH GRANT OPTION'
+  mysql_user:
+    name: "{{ dbuser }}"
+    password: "{{ dbpass }}"
+    priv: '*.*:ALL,GRANT'
+    state: present
+    login_unix_socket: "{{ login_sql_socket }}"
+
+
+- name: copy table data to server 
+  copy: 
+    src: files/table_dump.sql 
+    dest: /tmp/table_dump.sql 
+    owner: root 
+    mode: 0600
+
+- name: Import script to create table
+  mysql_db:
+    state: import
+    name: "{{ dbname }}"
+    target: /tmp/table_dump.sql
+    login_unix_socket: "{{ login_sql_socket }}"
+  run_once: true
+
+- name: install required packages
+  apt:
+    name:
+      - apache2
+      - php            
+      - php-mysql
+    state: present
+
+- name: start apache2 
+  service:
+    name: apache2
+    state: started
+    enabled: yes
+
+- name: change directory index 
+  command: sudo sed -i 's/index.html/index.php/g' /etc/apache2/mods-available/dir.conf
+  notify: "restart apache2"
+
+# - name: deploy source code to server 
+#   copy: 
+#     src: files/learning-app-ecommerce/
+#     dest: /var/www/html/
+#     owner: root 
+#     mode: 0777
+
+- name: Synchronization of src on the control machine to dest on the remote hosts
+  ansible.posix.synchronize:
+    src: files/learning-app-ecommerce/
+    dest: /var/www/html
+
+- name: change index.php file server details
+  command: sudo sed -i 's/172.20.1.101/localhost/g' /var/www/html/index.php

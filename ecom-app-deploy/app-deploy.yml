@@ -1,0 +1,5 @@
+- name: deploying ecom app on target servers
+  hosts: all
+  become: yes
+  roles:
+    - ecom-app

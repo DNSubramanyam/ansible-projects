@@ -1,0 +1,15 @@
+- name: include centos vars file
+  include_vars: centos_vars.yml
+  when: ansible_distribution == "CentOS"
+
+- name: Deploy ecom app on centos
+  include_tasks: centos.yml
+  when: ansible_distribution == "CentOS"
+
+- name: include ubuntu vars file
+  include_vars: ubuntu_vars.yml
+  when: ansible_distribution == "Ubuntu"
+
+- name: Deploy ecom app on ubuntu
+  include_tasks: ubuntu.yml
+  when: ansible_distribution == "Ubuntu"

@@ -1,0 +1,5 @@
+---
+# vars file for ecom-app
+dbname: ecomdb
+dbuser: ecomuser
+dbpass: ecompassword
